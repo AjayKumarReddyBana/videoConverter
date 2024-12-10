@@ -1,0 +1,30 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name of the video file",
+      "minLength": 1
+    },
+    "size": {
+      "type": "number",
+      "description": "The size of the video file in megabytes (MB)"
+    },
+    "language": {
+      "type": "string",
+      "description": "The target language for the video translation",
+      "minLength": 2
+    },
+    "email": {
+      "type": "string",
+      "description": "The email ID to notify the user about video processing updates",
+      "format": "email"
+    },
+    "updateType": {
+      "type": "string",
+      "description": "The mechanism for updating the user on the video processing progress",
+      "enum": ["progress_bar","email","api"]
+    }
+  },
+  "required": ["name", "size", "language", "updateType"]
+}

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Video Conversion</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+        }
+
+        .container {
+            max-width: 550px;
+            margin: 0 auto;
+        }
+
+        .block {
+            border: 2px solid #007BFF;
+            padding: 15px;
+            border-radius: 10px;
+            background-color: #F8F9FA;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .block h2 {
+            text-align: center;
+            color: #343A40;
+            margin-bottom: 15px;
+        }
+
+        .form-control {
+            margin-bottom: 10px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input, select {
+            width: 90%;
+            padding: 8px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            border: 1px solid #CED4DA;
+            border-radius: 4px;
+        }
+
+        button {
+            width: 100%;
+            background-color: #007BFF;
+            color: white;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #progress-container {
+            display: none;
+            margin-top: 15px;
+            background-color: #d6d8db;
+            border-radius: 4px;
+            height: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #progress-bar {
+            width: 0;
+            height: 100%;
+            background-color: green;
+            transition: width 0.5s ease;
+        }
+
+        .message {
+            font-size: 14px;
+            margin-top: 10px;
+            color: #495057;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="block">
+            <h2>Upload a New Video</h2>
+            <form id="upload-form">
+                <div class="form-control">
+                    <label for="name">Video Name:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-control">
+                    <label for="size">Video Size (MB):</label>
+                    <input type="number" id="size" name="size" required>
+                </div>
+                <div class="form-control">
+                    <label for="language">Output Language:</label>
+                    <input type="text" id="language" name="language" required>
+                </div>
+                <div class="form-control">
+                    <label for="email">Email ID:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-control">
+                    <label for="updateType">Update Mechanism:</label>
+                    <select id="updateType" name="updateType">
+                        <option value="">Select</option>
+                        <option value="progress_bar">Progress Bar</option>
+                        <option value="email">Email</option>
+                        <option value="api">API Tracking</option>
+                    </select>
+                </div>
+                <button type="button" onclick="uploadVideo()">Upload</button>
+            </form>
+            <div id="status" class="message"></div>
+            <div id="progress-container">
+                <div id="progress-bar"></div>
+            </div>
+        </div>
+        <div class="block">
+            <h2>Track Progress</h2>
+            <label for="jobId">Job ID:</label>
+            <input type="text" id="jobId" name="jobId">
+            <button type="button" onclick="trackProgress()">Track</button>
+            <div id="track-status" class="message"></div>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.2/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('updateType').value = '';
+    });
+
+    function uploadVideo() {
+        const name = document.getElementById('name').value;
+        const size = document.getElementById('size').value;
+        const language = document.getElementById('language').value;
+        const email = document.getElementById('email').value;
+        const updateType = document.getElementById('updateType').value;
+
+        fetch('/api/demo/uploadVideo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, size, language, email, updateType })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const statusElement = document.getElementById('status');
+            statusElement.innerHTML = data.message;
+            statusElement.classList.remove('hidden');
+            if (updateType === 'progress_bar') {
+                document.getElementById('progress-container').style.display = 'block';
+                document.getElementById('progress-bar').style.width = '0%';
+                startWebSocket(data.id, statusElement);
+            } else if (updateType === 'email') {
+                document.getElementById('progress-container').style.display = 'none';
+                statusElement.innerHTML += " Please check your email for progress updates.";
+            } else if (updateType === 'api') {
+                document.getElementById('progress-container').style.display = 'none';
+                statusElement.innerHTML += " Please use the tracking feature below to check progress.";
+            }
+        })
+        .catch(error => alert('Failed to upload video: ' + error.message));
+    }
+
+    function startWebSocket(jobId, statusElement) {
+        const socket = new SockJS('http://localhost:8080/api/demo/ws-progress');
+        const stompClient = Stomp.over(socket);
+        stompClient.connect({}, () => {
+            stompClient.subscribe(`/topic/progress/${jobId}`, message => {
+                const progress = parseFloat(message.body);
+                document.getElementById('progress-bar').style.width = progress + '%';
+                
+                // Dynamically update the progress message
+                statusElement.innerHTML = `Progress: ${progress}%`;
+
+                if (progress === 100) {
+                    statusElement.innerHTML += `<br>Video conversion completed. Job ID: ${jobId}`
+                    // Add the download link
+                	const downloadLink = document.createElement('a');
+                	downloadLink.href = `http://example.com/download/${jobId}`; 
+                	downloadLink.innerText = 'Click here to download your video';
+                	downloadLink.style.display = 'block'; 
+                	downloadLink.style.marginTop = '10px';
+                	statusElement.appendChild(downloadLink);
+                }
+                
+                
+            });
+        });
+    }
+    
+
+    function trackProgress() {
+    const jobId = document.getElementById('jobId').value;
+
+    fetch(`/api/demo/getStatus?id=${jobId}`)
+        .then(async response => {
+            if (!response.ok) {
+                // Parse the JSON response to extract the error message
+                const error = await response.json();
+                throw new Error(error.message || `Unexpected error with status: ${response.status}`);
+            }
+            return response.json(); // Parse response JSON if the status is OK
+        })
+        .then(status => {
+            // Display the valid response message
+            const trackStatus = document.getElementById('track-status');
+            trackStatus.innerText = status.message;
+            trackStatus.classList.remove('hidden');
+        })
+        .catch(error => {
+            // Display the error message from the backend
+            const trackStatus = document.getElementById('track-status');
+            trackStatus.innerText = error.message;
+            trackStatus.classList.remove('hidden');
+        });
+}
+
+
+
+</script>
+
+</body>
+</html>
