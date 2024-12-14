@@ -201,7 +201,3 @@ This project is licensed under the MIT License. See the LICENSE file for details
 For questions or support:
 - **Email**: ajaykumareddybana@gmail.com
 - **GitHub**: [AjayKumarReddyBana](https://github.com/AjayKumarReddyBana)
-
---- 
-
-This README provides a comprehensive guide to setting up, using, and extending your Video Conversion Application. Let me know if you'd like further refinements!
