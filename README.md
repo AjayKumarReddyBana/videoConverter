@@ -55,8 +55,8 @@ This project demonstrates best practices in software development with features l
 
 ### 1. **Clone the Repository**
 ```bash
-git clone https://github.com/yourusername/video-conversion-app.git
-cd video-conversion-app
+git clone https://github.com/AjayKumarReddyBana/videoConverter.git
+cd videoConverter
 ```
 
 ### 2. **Backend Setup**
