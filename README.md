@@ -155,6 +155,120 @@ stompClient.connect({}, () => {
 });
 ```
 
+## Email Templates for Video Conversion Application
+
+### Overview
+The Video Conversion Application includes two email templates that enhance user communication by providing updates on video conversion progress and completion. These templates are stored in the `src/main/resources/templates` directory and are rendered using HTML for better user experience.
+
+### 1. **Progress Update Email Template**
+
+This email template is used to notify users about the progress of their video conversion. It dynamically fills placeholders such as `{{jobId}}` and `{{progress}}%` to personalize the message for the user.
+
+#### File: `src/main/resources/templates/progress_email.html`
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Conversion Progress</title>
+</head>
+<body>
+    <p>Dear User,</p>
+    <p>We are pleased to inform you about the progress of your video conversion.</p>
+    <p><strong>Job ID:</strong> {{jobId}}</p>
+    <p><strong>Current Progress:</strong> {{progress}}%</p>
+    <p>You’ll be informed at every step as your video conversion progresses.</p>
+    <p>Thank you for your patience.</p>
+    <p>Best regards,</p>
+    <p>Video Conversion Team</p>
+</body>
+</html>
+```
+
+#### Example Usage
+When the server sends a progress update, it will populate the `{{jobId}}` and `{{progress}}` fields before sending the email.
+
+Example:
+- **Job ID:** `12345`
+- **Progress:** `75%`
+
+The email would look like this:
+```
+Dear User,
+
+We are pleased to inform you about the progress of your video conversion.
+
+Job ID: 12345
+Current Progress: 75%
+
+You’ll be informed at every step as your video conversion progresses.
+
+Thank you for your patience.
+
+Best regards,
+Video Conversion Team
+```
+
+---
+
+### 2. **Completion Email Template**
+
+This email template is sent when the video conversion is successfully completed. It provides the user with a download link for the converted video and dynamically fills placeholders such as `{{jobId}}` and `{{downloadLink}}`.
+
+#### File: `src/main/resources/templates/completion_email.html`
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Conversion Completed</title>
+</head>
+<body>
+    <p>Dear User,</p>
+    <p>We are excited to inform you that your video conversion has been successfully completed.</p>
+    <p><strong>Job ID:</strong> {{jobId}}</p>
+    <p>You can download your video using the link below:</p>
+    <a href="{{downloadLink}}">{{downloadLink}}</a>
+    <p>Thank you for choosing our service.</p>
+    <p>Best regards,</p>
+    <p>Video Conversion Team</p>
+</body>
+</html>
+```
+
+#### Example Usage
+When the server sends the final completion email, it will populate the `{{jobId}}` and `{{downloadLink}}` placeholders.
+
+Example:
+- **Job ID:** `12345`
+- **Download Link:** `http://example.com/download/12345`
+
+The email would look like this:
+```
+Dear User,
+
+We are excited to inform you that your video conversion has been successfully completed.
+
+Job ID: 12345
+
+You can download your video using the link below:
+http://example.com/download/12345
+
+Thank you for choosing our service.
+
+Best regards,
+Video Conversion Team
+```
+
+---
+
+### Instructions to Use
+1. **Placement:** Store these files in the `src/main/resources/templates` directory of your project.
+2. **Integration:**
+   - Use a templating engine like **Thymeleaf** or **Freemarker** to dynamically replace the placeholders (`{{jobId}}`, `{{progress}}`, `{{downloadLink}}`) before sending the email.
+3. **Customization:** Modify the HTML to match your company's branding or include additional information as required.
+4. **Sending Email:** Ensure the `JavaMailSender` is configured properly in the application for sending these emails. Refer to the [Email Configuration Section](#email-configuration) in this README for details.
+
+By using these templates, the Video Conversion Application ensures a professional and user-friendly email communication experience.
+
 ---
 
 ## Integration Tests
